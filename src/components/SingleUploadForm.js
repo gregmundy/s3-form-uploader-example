@@ -1,67 +1,28 @@
-import React, { useState } from "react";
-import axios from "axios";
-import { getAccessToken } from "../services/services";
+import React, { useState, useEffect } from "react";
+import { uploadSingle } from "../services/services";
 
 const SingleUploadForm = () => {
   const [uploadFile, updateUploadFile] = useState(null); // file object to upload to s3
   const [isUploading, toggleUploading] = useState(false); // whether or not is uploading
   const [uploadSuccess, toggleUploadSuccess] = useState(undefined);
 
-  const s3ServiceUrl = process.env.REACT_APP_S3_SERVICE_URL;
-
-  const handleFileUpload = (evt) => {
+  const handleFileSelected = (evt) => {
     updateUploadFile(evt.target.files[0]);
   };
 
-  async function uploadSingleToS3() {
-    try {
-      let accessToken = await getAccessToken();
-      toggleUploading(true);
+  const handleFileUpload = () => {
+    uploadSingle(uploadFile, toggleUploading, toggleUploadSuccess);
+  };
 
-      const options = {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      };
-
-      // Give file a name based on agreed upon format to allow for parsing.
-      const response = await axios.post(
-        s3ServiceUrl,
-        {
-          action: "SINGLE",
-          payload: {
-            fileName: uploadFile.name,
-          },
-        },
-        options
-      );
-
-      const url = response.data.body.url;
-      const fields = response.data.body.fields;
-      const formData = new FormData();
-
-      // add keys from S3 pre-signed url response to form data
-      Object.keys(fields).forEach((key) => {
-        formData.append(key, fields[key]);
-      });
-
-      formData.append("file", uploadFile);
-
-      // upload to the pre-signed url via a POST
-      await axios.post(url, formData);
-      toggleUploading(false);
-      updateUploadFile(null);
-      toggleUploadSuccess(true);
-    } catch (err) {
-      console.log(`The following error occured ${err}`);
-      toggleUploading(false);
-      updateUploadFile(null);
-      toggleUploadSuccess(false);
+  useEffect(() => {
+    if (!isUploading && uploadSuccess !== undefined) {
+      // Clear the upload success (or failure) message.
+      setTimeout(() => {
+        toggleUploadSuccess(undefined);
+        updateUploadFile(null);
+      }, 10000);
     }
-
-    // Clear the upload success (or failure) message.
-    setTimeout(() => {
-      toggleUploadSuccess(undefined);
-    }, 10000);
-  }
+  }, [isUploading, uploadSuccess]);
 
   return (
     <div className="container">
@@ -72,14 +33,14 @@ const SingleUploadForm = () => {
             <input
               type="file"
               className="form-control"
-              onChange={handleFileUpload}
+              onChange={handleFileSelected}
             />
           </div>
         </form>
         <button
           type="button"
           className="btn btn-success btn-block"
-          onClick={uploadSingleToS3}
+          onClick={handleFileUpload}
           disabled={uploadFile === null}
         >
           Upload to S3

@@ -96,11 +96,11 @@ async function uploadMultiPart(uploadFile, progressCallback) {
     }
 
     progressCallback({
-        totalParts: preSignedUrls.length,
-        lastUploadedPart: i + 1,
-        status: successfulUpload,
-        totalFileSize: uploadFile.size,
-        uploadChunkSize: chunk.size,
+      totalParts: preSignedUrls.length,
+      lastUploadedPart: i + 1,
+      status: successfulUpload,
+      totalFileSize: uploadFile.size,
+      uploadChunkSize: chunk.size,
     });
 
     let remainingBytes = uploadFile.size - currentChunkFinalByte;
@@ -161,4 +161,50 @@ async function uploadMultiPart(uploadFile, progressCallback) {
   }
 }
 
-export { getAccessToken, uploadMultiPart };
+async function uploadSingle(
+  uploadFile,
+  uploadInProgressCallback,
+  uploadSuccessCallback
+) {
+  try {
+    let accessToken = await getAccessToken();
+    uploadInProgressCallback(true);
+
+    const options = {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    };
+
+    // Give file a name based on agreed upon format to allow for parsing.
+    const response = await axios.post(
+      s3ServiceUrl,
+      {
+        action: "SINGLE",
+        payload: {
+          fileName: uploadFile.name,
+        },
+      },
+      options
+    );
+
+    const url = response.data.body.url;
+    const fields = response.data.body.fields;
+    const formData = new FormData();
+
+    // add keys from S3 pre-signed url response to form data
+    Object.keys(fields).forEach((key) => {
+      formData.append(key, fields[key]);
+    });
+
+    formData.append("file", uploadFile);
+
+    // upload to the pre-signed url via a POST
+    await axios.post(url, formData);
+    uploadInProgressCallback(false);
+    uploadSuccessCallback(true);
+  } catch (err) {
+    uploadInProgressCallback(false);
+    uploadSuccessCallback(false);
+  }
+}
+
+export { getAccessToken, uploadMultiPart, uploadSingle };
