@@ -50,4 +50,4 @@ Run the application either with `npm start` or `yarn start`.
 
 ### Tests
 
-This application has no unit tests; therefore, use with caution.
+This application has no unit tests. Use with caution.
