@@ -26,4 +26,28 @@ Multipart upload mode allows users to upload files in discrete chunks. It is the
 
 ## Demo Project
 
-The demo project demonstrates both upload modes. The 
+The demo project demonstrates both upload modes. A component has been implemented for each upload type (see [src/components/SingleUploadForm.js](./src/components/SingleUploadForm.js) and [src/components/MultiPartUploadForm.js](./src/components/MultiPartUploadForm.js)).
+
+The logic for uploads, including the necessary API calls are found at [src/services/services.js](./src/services/services.js).
+
+### Configuration
+
+In order to run the app locally, create an `env.development.local` environment file in the application root and provide the environment variables listed in the table below.
+
+| Environment Variable     | Description                                                                                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| REACT_APP_S3_SERVICE_URL | The URL for the Brighthive Secure File Uploader service.                                                                                                |
+| REACT_APP_CLIENT_ID      | The client ID for the Brighthive OAuth2 client.                                                                                                         |
+| REACT_APP_CLIENT_SECRET  | The client secret associated with the Brighthive OAuth2 client. Note this should never be exposed in a production web application.                      |
+| REACT_APP_OAUTH2_URL     | The URL for the Brighthive OAuth 2 server.                                                                                                              |
+| REACT_APP_GRANT_TYPE     | The OAuth2 grant type associated with the client. For this demo use `client_credentials`. In a live web application this grant type should not be used. |
+
+For security reasons, please ensure that these environment variables are never committed to the code repository.
+
+### Running the Application
+
+Run the application either with `npm start` or `yarn start`.
+
+### Tests
+
+This application has no unit tests; therefore, use with caution.
